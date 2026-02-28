@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Blood Stock - Blood Donation Management{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h2><i class="fas fa-vials"></i> Blood Stock Management</h2>
+        <p class="mb-0">Manage blood inventory and track available units</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Add Stock Form -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-plus-circle"></i> Add/Remove Stock</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-4">
+                    <label class="form-label">Blood Group</label>
+                    <select name="blood_group" class="form-select" required>
+                        <option value="">Select Blood Group</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Units</label>
+                    <input type="number" name="units" class="form-control" min="1" value="1" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Action</label>
+                    <select name="action" class="form-select" required>
+                        <option value="add">Add Stock</option>
+                        <option value="remove">Remove Stock</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-blood w-100">
+                        <i class="fas fa-save"></i> Update
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Blood Stock Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-list"></i> Current Blood Stock</h5>
+        </div>
+        <div class="card-body">
+            {% if stocks %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Blood Group</th>
+                            <th>Units Available</th>
+                            <th>Last Updated</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stock in stocks %}
+                        <tr>
+                            <td>
+                                <span class="blood-type-badge">{{ stock.blood_group }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ stock.units_available }}</strong> units
+                            </td>
+                            <td>{{ stock.last_updated|date:"M d, Y H:i" }}</td>
+                            <td>
+                                {% if stock.units_available == 0 %}
+                                <span class="status-badge status-rejected">Out of Stock</span>
+                                {% elif stock.units_available < 5 %}
+                                <span class="status-badge status-pending">Low Stock</span>
+                                {% else %}
+                                <span class="status-badge status-approved">Available</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-vials"></i>
+                <h4>No Blood Stock Records</h4>
+                <p>Add stock using the form above to get started.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Stock Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        {% if stocks %}
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-vials"></i>
+                                </div>
+                                <div class="stat-number">{{ stocks|length }}</div>
+                                <div class="stat-label">Blood Types</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="stat-number">
+                                    {% with total=0 %}
+                                    {% for s in stocks %}{% with total=total|add:s.units_available %}{% endwith %}{% endfor %}
+                                    {{ total }}
+                                    {% endwith %}
+                                </div>
+                                <div class="stat-label">Total Units</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: linear-gradient(135deg, #ffc107, #ffcd39);">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="stat-number">
+                                    {% for s in stocks %}{% if s.units_available < 5 %}{% if forloop.first %}{% if forloop.counter == 1 %}{{ forloop.counter }}{% endif %}{% endif %}{% endif %}{% endfor %}
+                                </div>
+                                <div class="stat-label">Low Stock</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-icon" style="background: linear-gradient(135deg, #dc3545, #c82333);">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                                <div class="stat-number">
+                                    {% for s in stocks %}{% if s.units_available == 0 %}{{ forloop.counter }}{% endif %}{% endfor %}
+                                </div>
+                                <div class="stat-label">Out of Stock</div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12">
+                            <p class="text-muted">No stock data available</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

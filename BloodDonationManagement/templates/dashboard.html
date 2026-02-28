@@ -57,6 +57,11 @@
                         <a href="{% url 'request_blood' %}" class="btn btn-blood">
                             <i class="fas fa-hand-holding-medical"></i> Request Blood
                         </a>
+                        {% if user.is_superuser %}
+                        <a href="{% url 'blood_stock' %}" class="btn btn-blood">
+                            <i class="fas fa-vials"></i> Blood Stock
+                        </a>
+                        {% endif %}
                         <a href="{% url 'search' %}" class="btn btn-outline-blood">
                             <i class="fas fa-search"></i> Search Donors
                         </a>
@@ -88,7 +93,7 @@
                                 <tr>
                                     <th>Name</th>
                                     <th>Blood Group</th>
-                                    <th>City</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -96,7 +101,15 @@
                                 <tr>
                                     <td class="fw-bold">{{ donor.name }}</td>
                                     <td><span class="blood-type-badge">{{ donor.blood_group }}</span></td>
-                                    <td>{{ donor.city }}</td>
+                                    <td>
+                                        {% if donor.status == 'Pending' %}
+                                        <span class="status-badge status-pending">Pending</span>
+                                        {% elif donor.status == 'Approved' %}
+                                        <span class="status-badge status-approved">Approved</span>
+                                        {% else %}
+                                        <span class="status-badge status-rejected">Rejected</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

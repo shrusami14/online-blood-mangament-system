@@ -18,12 +18,16 @@ urlpatterns = [
     path('donors/', views.donor_list, name='donor_list'),
     path('edit-donor/<int:id>/', views.edit_donor, name='edit_donor'),
     path('delete-donor/<int:id>/', views.delete_donor, name='delete_donor'),
+    path('approve-donor/<int:id>/', views.approve_donor, name='approve_donor'),
+    path('reject-donor/<int:id>/', views.reject_donor, name='reject_donor'),
     path('request-blood/', views.request_blood, name='request_blood'),
     path('requests/', views.request_list, name='request_list'),
     path('approve-request/<int:id>/', views.approve_request, name='approve_request'),
+    path('reject-request/<int:id>/', views.reject_request, name='reject_request'),
     path('delete-request/<int:id>/', views.delete_request, name='delete_request'),
     path('search/', views.search, name='search'),
     path('profile/', views.profile, name='profile'),
+    path('blood-stock/', views.blood_stock, name='blood_stock'),
 ]
 
 if settings.DEBUG:

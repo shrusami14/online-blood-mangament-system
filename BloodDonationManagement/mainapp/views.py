@@ -4,8 +4,18 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.db.models import Q
-from .models import Donor, BloodRequest
+from .models import Donor, BloodRequest, BloodStock
 from datetime import date
+
+
+def admin_required(view_func):
+    """Decorator to check if user is admin"""
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            messages.error(request, 'Only administrators can perform this action.')
+            return redirect('dashboard')
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 
 def home(request):
@@ -98,9 +108,10 @@ def add_donor(request):
                 blood_group=blood_group,
                 phone=phone,
                 city=city,
-                last_donation=last_donation if last_donation else None
+                last_donation=last_donation if last_donation else None,
+                status='Pending'  # New donors are pending by default
             )
-            messages.success(request, f'Donor {name} added successfully!')
+            messages.success(request, f'Donor {name} added successfully! Your registration is pending approval.')
             return redirect('donor_list')
         else:
             messages.error(request, 'Please fill in all required fields.')
@@ -116,8 +127,9 @@ def donor_list(request):
 
 
 @login_required
+@admin_required
 def edit_donor(request, id):
-    """Edit donor view"""
+    """Edit donor view - Admin only"""
     try:
         donor = Donor.objects.get(id=id)
     except Donor.DoesNotExist:
@@ -141,12 +153,41 @@ def edit_donor(request, id):
 
 
 @login_required
+@admin_required
 def delete_donor(request, id):
-    """Delete donor view"""
+    """Delete donor view - Admin only"""
     try:
         donor = Donor.objects.get(id=id)
         donor.delete()
         messages.success(request, 'Donor deleted successfully!')
+    except Donor.DoesNotExist:
+        messages.error(request, 'Donor not found.')
+    return redirect('donor_list')
+
+
+@login_required
+@admin_required
+def approve_donor(request, id):
+    """Approve donor view - Admin only"""
+    try:
+        donor = Donor.objects.get(id=id)
+        donor.status = 'Approved'
+        donor.save()
+        messages.success(request, f'Donor {donor.name} approved successfully!')
+    except Donor.DoesNotExist:
+        messages.error(request, 'Donor not found.')
+    return redirect('donor_list')
+
+
+@login_required
+@admin_required
+def reject_donor(request, id):
+    """Reject donor view - Admin only"""
+    try:
+        donor = Donor.objects.get(id=id)
+        donor.status = 'Rejected'
+        donor.save()
+        messages.success(request, f'Donor {donor.name} rejected!')
     except Donor.DoesNotExist:
         messages.error(request, 'Donor not found.')
     return redirect('donor_list')
@@ -189,21 +230,49 @@ def request_list(request):
 
 
 @login_required
+@admin_required
 def approve_request(request, id):
-    """Approve blood request view"""
+    """Approve blood request view and deduct stock - Admin only"""
     try:
         blood_request = BloodRequest.objects.get(id=id)
-        blood_request.status = 'Approved'
-        blood_request.save()
-        messages.success(request, 'Blood request approved successfully!')
+        # Try to deduct from stock
+        try:
+            stock = BloodStock.objects.get(blood_group=blood_request.blood_group)
+            if stock.units_available >= blood_request.units:
+                stock.units_available -= blood_request.units
+                stock.save()
+                blood_request.status = 'Approved'
+                blood_request.save()
+                messages.success(request, f'Blood request approved! {blood_request.units} units deducted from stock.')
+            else:
+                messages.error(request, f'Insufficient stock! Available: {stock.units_available}, Required: {blood_request.units}')
+        except BloodStock.DoesNotExist:
+            blood_request.status = 'Approved'
+            blood_request.save()
+            messages.success(request, 'Blood request approved successfully!')
     except BloodRequest.DoesNotExist:
         messages.error(request, 'Blood request not found.')
     return redirect('request_list')
 
 
 @login_required
+@admin_required
+def reject_request(request, id):
+    """Reject blood request view - Admin only"""
+    try:
+        blood_request = BloodRequest.objects.get(id=id)
+        blood_request.status = 'Rejected'
+        blood_request.save()
+        messages.success(request, 'Blood request rejected.')
+    except BloodRequest.DoesNotExist:
+        messages.error(request, 'Blood request not found.')
+    return redirect('request_list')
+
+
+@login_required
+@admin_required
 def delete_request(request, id):
-    """Delete blood request view"""
+    """Delete blood request view - Admin only"""
     try:
         blood_request = BloodRequest.objects.get(id=id)
         blood_request.delete()
@@ -247,3 +316,28 @@ def profile(request):
         'requests': requests,
     }
     return render(request, 'profile.html')
+
+
+@login_required
+@admin_required
+def blood_stock(request):
+    """Blood stock management view - Admin only"""
+    if request.method == 'POST':
+        blood_group = request.POST.get('blood_group')
+        units = request.POST.get('units')
+        action = request.POST.get('action')
+        
+        try:
+            stock = BloodStock.objects.get(blood_group=blood_group)
+            if action == 'add':
+                stock.units_available += int(units)
+            elif action == 'remove':
+                stock.units_available = max(0, stock.units_available - int(units))
+            stock.save()
+            messages.success(request, f'Blood stock updated for {blood_group}!')
+        except BloodStock.DoesNotExist:
+            messages.error(request, 'Blood group not found.')
+        return redirect('blood_stock')
+    
+    stocks = BloodStock.objects.all().order_by('blood_group')
+    return render(request, 'blood_stock.html', {'stocks': stocks})

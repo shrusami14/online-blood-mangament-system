@@ -12,12 +12,12 @@ django.setup()
 from django.contrib.auth.models import User
 
 # Check if superuser exists, if not create one
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
+if not User.objects.filter(username='rutuja').exists():
+    User.objects.create_superuser('rutuja', 'rutuja@example.com', 'rutuja2027')
     print('Superuser created successfully!')
-    print('Username: admin')
-    print('Password: admin123')
+    print('Username: rutuja')
+    print('Password: rutuja2027')
 else:
     print('Superuser already exists!')
-    print('Username: admin')
-    print('Password: admin123')
+    print('Username: rutuja')
+    print('Password: rutuja2027')

@@ -33,7 +33,9 @@
                             <th><i class="fas fa-city"></i> City</th>
                             <th><i class="fas fa-exclamation-triangle"></i> Urgency</th>
                             <th><i class="fas fa-info-circle"></i> Status</th>
+                            {% if user.is_superuser %}
                             <th><i class="fas fa-cog"></i> Actions</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -62,16 +64,21 @@
                                 <span class="status-badge status-rejected">Rejected</span>
                                 {% endif %}
                             </td>
+                            {% if user.is_superuser %}
                             <td>
                                 {% if req.status == 'Pending' %}
                                 <a href="{% url 'approve_request' req.id %}" class="btn btn-sm btn-success me-1" title="Approve">
                                     <i class="fas fa-check"></i>
+                                </a>
+                                <a href="{% url 'reject_request' req.id %}" class="btn btn-sm btn-warning me-1" title="Reject">
+                                    <i class="fas fa-times"></i>
                                 </a>
                                 {% endif %}
                                 <a href="{% url 'delete_request' req.id %}" class="btn btn-sm btn-danger text-white" onclick="return confirm('Are you sure you want to delete this request?')" title="Delete">
                                     <i class="fas fa-trash"></i>
                                 </a>
                             </td>
+                            {% endif %}
                         </tr>
                         {% endfor %}
                     </tbody>
