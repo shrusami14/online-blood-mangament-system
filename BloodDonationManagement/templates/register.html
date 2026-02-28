@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Blood Donation Management System{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="form-container">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-user-plus"></i> Register</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label">
+                            <i class="fas fa-user"></i> Username
+                        </label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                        <div class="text-danger small mt-1">{{ form.username.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_password1" class="form-label">
+                            <i class="fas fa-lock"></i> Password
+                        </label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
+                        <div class="text-danger small mt-1">{{ form.password1.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-4">
+                        <label for="id_password2" class="form-label">
+                            <i class="fas fa-lock"></i> Confirm Password
+                        </label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                        <div class="text-danger small mt-1">{{ form.password2.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-blood btn-lg">
+                            <i class="fas fa-user-plus"></i> Register
+                        </button>
+                    </div>
+                </form>
+                <hr class="my-4">
+                <p class="text-center mb-0">
+                    Already have an account? 
+                    <a href="{% url 'login' %}" class="text-danger text-decoration-none fw-bold">Login here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

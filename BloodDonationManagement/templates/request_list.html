@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Blood Requests - Blood Donation Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h2><i class="fas fa-hand-holding-medical"></i> Blood Requests</h2>
+        <p class="mb-0">View all blood requests</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <a href="{% url 'request_blood' %}" class="btn btn-blood">
+                <i class="fas fa-plus-circle"></i> New Request
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            {% if requests %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user-injured"></i> Patient</th>
+                            <th><i class="fas fa-tint"></i> Blood Group</th>
+                            <th><i class="fas fa-plus-square"></i> Units</th>
+                            <th><i class="fas fa-hospital"></i> Hospital</th>
+                            <th><i class="fas fa-city"></i> City</th>
+                            <th><i class="fas fa-exclamation-triangle"></i> Urgency</th>
+                            <th><i class="fas fa-info-circle"></i> Status</th>
+                            <th><i class="fas fa-cog"></i> Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in requests %}
+                        <tr>
+                            <td class="fw-bold">{{ req.patient_name }}</td>
+                            <td><span class="blood-type-badge">{{ req.blood_group }}</span></td>
+                            <td>{{ req.units }}</td>
+                            <td>{{ req.hospital }}</td>
+                            <td>{{ req.city }}</td>
+                            <td>
+                                {% if req.urgency == 'Critical' %}
+                                <span class="status-badge urgency-critical">Critical</span>
+                                {% elif req.urgency == 'Urgent' %}
+                                <span class="status-badge urgency-urgent">Urgent</span>
+                                {% else %}
+                                <span class="status-badge urgency-normal">Normal</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.status == 'Pending' %}
+                                <span class="status-badge status-pending">Pending</span>
+                                {% elif req.status == 'Approved' %}
+                                <span class="status-badge status-approved">Approved</span>
+                                {% else %}
+                                <span class="status-badge status-rejected">Rejected</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.status == 'Pending' %}
+                                <a href="{% url 'approve_request' req.id %}" class="btn btn-sm btn-success me-1" title="Approve">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'delete_request' req.id %}" class="btn btn-sm btn-danger text-white" onclick="return confirm('Are you sure you want to delete this request?')" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-hand-holding-medical"></i>
+                <h4>No Requests Found</h4>
+                <p>No blood requests have been submitted yet.</p>
+                <a href="{% url 'request_blood' %}" class="btn btn-blood mt-3">
+                    <i class="fas fa-plus-circle"></i> Submit First Request
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

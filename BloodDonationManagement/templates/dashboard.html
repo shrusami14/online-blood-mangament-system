@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Blood Donation Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h2><i class="fas fa-chart-line"></i> Dashboard</h2>
+        <p class="mb-0">Welcome back, {{ user.username }}!</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Statistics Cards -->
+    <div class="row mb-5">
+        <div class="col-md-4 mb-4">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-number">{{ total_donors }}</div>
+                <div class="stat-label">Total Donors</div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #fd7e14 0%, #ff8c00 100%);">
+                    <i class="fas fa-hand-holding-medical"></i>
+                </div>
+                <div class="stat-number">{{ total_requests }}</div>
+                <div class="stat-label">Total Requests</div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <i class="fas fa-tint"></i>
+                </div>
+                <div class="stat-number">{{ pending_requests }}</div>
+                <div class="stat-label">Pending Requests</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="{% url 'add_donor' %}" class="btn btn-blood">
+                            <i class="fas fa-user-plus"></i> Add Donor
+                        </a>
+                        <a href="{% url 'request_blood' %}" class="btn btn-blood">
+                            <i class="fas fa-hand-holding-medical"></i> Request Blood
+                        </a>
+                        <a href="{% url 'search' %}" class="btn btn-outline-blood">
+                            <i class="fas fa-search"></i> Search Donors
+                        </a>
+                        <a href="{% url 'donor_list' %}" class="btn btn-outline-blood">
+                            <i class="fas fa-users"></i> View All Donors
+                        </a>
+                        <a href="{% url 'request_list' %}" class="btn btn-outline-blood">
+                            <i class="fas fa-list"></i> View All Requests
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Data -->
+    <div class="row">
+        <!-- Recent Donors -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> Recent Donors</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_donors %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Blood Group</th>
+                                    <th>City</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for donor in recent_donors %}
+                                <tr>
+                                    <td class="fw-bold">{{ donor.name }}</td>
+                                    <td><span class="blood-type-badge">{{ donor.blood_group }}</span></td>
+                                    <td>{{ donor.city }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state py-4">
+                        <i class="fas fa-users"></i>
+                        <h5>No Donors Yet</h5>
+                        <p>Add your first donor to get started.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Requests -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-hand-holding-medical"></i> Recent Requests</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_requests %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Blood Group</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in recent_requests %}
+                                <tr>
+                                    <td class="fw-bold">{{ req.patient_name }}</td>
+                                    <td><span class="blood-type-badge">{{ req.blood_group }}</span></td>
+                                    <td>
+                                        {% if req.status == 'Pending' %}
+                                        <span class="status-badge status-pending">Pending</span>
+                                        {% elif req.status == 'Approved' %}
+                                        <span class="status-badge status-approved">Approved</span>
+                                        {% else %}
+                                        <span class="status-badge status-rejected">Rejected</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state py-4">
+                        <i class="fas fa-hand-holding-medical"></i>
+                        <h5>No Requests Yet</h5>
+                        <p>Submit your first blood request.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

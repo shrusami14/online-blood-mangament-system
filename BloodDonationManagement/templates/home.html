@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Blood Donation Management System{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container text-center">
+        <h1><i class="fas fa-tint-alt"></i> Blood Donation System</h1>
+        <p class="lead mb-4">Donate Blood, Save Lives. Every drop counts!</p>
+        {% if not user.is_authenticated %}
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{% url 'register' %}" class="btn btn-light btn-lg px-5">
+                <i class="fas fa-user-plus"></i> Register Now
+            </a>
+            <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg px-5">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </a>
+        </div>
+        {% else %}
+        <a href="{% url 'dashboard' %}" class="btn btn-light btn-lg px-5">
+            <i class="fas fa-chart-line"></i> Go to Dashboard
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container">
+    <!-- Features Section -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h2 class="fw-bold" style="color: var(--blood-red);">How It Works</h2>
+            <p class="text-muted">Simple steps to save lives</p>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="stat-icon mx-auto mb-3">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Register</h5>
+                    <p class="card-text text-muted">Create an account and register as a blood donor</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="stat-icon mx-auto mb-3">
+                        <i class="fas fa-tint"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Donate</h5>
+                    <p class="card-text text-muted">Donate blood and help those in need</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="stat-icon mx-auto mb-3">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Save Lives</h5>
+                    <p class="card-text text-muted">Your donation can save up to 3 lives</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blood Types Info -->
+    <div class="row mb-5">
+        <div class="col-12 text-center mb-4">
+            <h2 class="fw-bold" style="color: var(--blood-red);">Blood Types</h2>
+            <p class="text-muted">Know your blood type and donate</p>
+        </div>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="d-flex justify-content-center flex-wrap gap-3">
+                        <span class="blood-type-badge">A+</span>
+                        <span class="blood-type-badge">A-</span>
+                        <span class="blood-type-badge">B+</span>
+                        <span class="blood-type-badge">B-</span>
+                        <span class="blood-type-badge">O+</span>
+                        <span class="blood-type-badge">O-</span>
+                        <span class="blood-type-badge">AB+</span>
+                        <span class="blood-type-badge">AB-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    {% if not user.is_authenticated %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card text-center" style="background: linear-gradient(135deg, var(--blood-red) 0%, var(--blood-red-dark) 100%); color: white;">
+                <div class="card-body py-5">
+                    <h2 class="mb-3">Ready to Save Lives?</h2>
+                    <p class="mb-4">Join our community of blood donors and make a difference</p>
+                    <a href="{% url 'register' %}" class="btn btn-light btn-lg px-5">
+                        <i class="fas fa-user-plus"></i> Register Now
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

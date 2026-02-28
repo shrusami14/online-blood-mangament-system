@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Donor - Blood Donation Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h2><i class="fas fa-edit"></i> Edit Donor</h2>
+        <p class="mb-0">Update donor information</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="form-container">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0"><i class="fas fa-edit"></i> Edit Donor Information</h4>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="name" class="form-label">
+                                        <i class="fas fa-user"></i> Full Name
+                                    </label>
+                                    <input type="text" name="name" class="form-control" id="name" value="{{ donor.name }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="age" class="form-label">
+                                        <i class="fas fa-calendar"></i> Age
+                                    </label>
+                                    <input type="number" name="age" class="form-control" id="age" value="{{ donor.age }}" min="18" max="65" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="gender" class="form-label">
+                                        <i class="fas fa-venus-mars"></i> Gender
+                                    </label>
+                                    <select name="gender" class="form-select" id="gender" required>
+                                        <option value="Male" {% if donor.gender == 'Male' %}selected{% endif %}>Male</option>
+                                        <option value="Female" {% if donor.gender == 'Female' %}selected{% endif %}>Female</option>
+                                        <option value="Other" {% if donor.gender == 'Other' %}selected{% endif %}>Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="blood_group" class="form-label">
+                                        <i class="fas fa-tint"></i> Blood Group
+                                    </label>
+                                    <select name="blood_group" class="form-select" id="blood_group" required>
+                                        <option value="A+" {% if donor.blood_group == 'A+' %}selected{% endif %}>A+</option>
+                                        <option value="A-" {% if donor.blood_group == 'A-' %}selected{% endif %}>A-</option>
+                                        <option value="B+" {% if donor.blood_group == 'B+' %}selected{% endif %}>B+</option>
+                                        <option value="B-" {% if donor.blood_group == 'B-' %}selected{% endif %}>B-</option>
+                                        <option value="O+" {% if donor.blood_group == 'O+' %}selected{% endif %}>O+</option>
+                                        <option value="O-" {% if donor.blood_group == 'O-' %}selected{% endif %}>O-</option>
+                                        <option value="AB+" {% if donor.blood_group == 'AB+' %}selected{% endif %}>AB+</option>
+                                        <option value="AB-" {% if donor.blood_group == 'AB-' %}selected{% endif %}>AB-</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">
+                                        <i class="fas fa-phone"></i> Phone Number
+                                    </label>
+                                    <input type="tel" name="phone" class="form-control" id="phone" value="{{ donor.phone }}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="city" class="form-label">
+                                        <i class="fas fa-city"></i> City
+                                    </label>
+                                    <input type="text" name="city" class="form-control" id="city" value="{{ donor.city }}" required>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="last_donation" class="form-label">
+                                    <i class="fas fa-calendar-alt"></i> Last Donation Date (Optional)
+                                </label>
+                                <input type="date" name="last_donation" class="form-control" id="last_donation" value="{{ donor.last_donation }}">
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-blood btn-lg">
+                                    <i class="fas fa-save"></i> Update Donor
+                                </button>
+                                <a href="{% url 'donor_list' %}" class="btn btn-outline-blood">
+                                    <i class="fas fa-arrow-left"></i> Back to Donors
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

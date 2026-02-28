@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Donors - Blood Donation Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h2><i class="fas fa-search"></i> Search Donors</h2>
+        <p class="mb-0">Find blood donors by blood group or city</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-lg-8 mx-auto">
+            <div class="search-container">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-5">
+                        <label for="blood_group" class="form-label">
+                            <i class="fas fa-tint"></i> Blood Group
+                        </label>
+                        <select name="blood_group" class="form-select" id="blood_group">
+                            <option value="">All Blood Groups</option>
+                            <option value="A+" {% if blood_group == 'A+' %}selected{% endif %}>A+</option>
+                            <option value="A-" {% if blood_group == 'A-' %}selected{% endif %}>A-</option>
+                            <option value="B+" {% if blood_group == 'B+' %}selected{% endif %}>B+</option>
+                            <option value="B-" {% if blood_group == 'B-' %}selected{% endif %}>B-</option>
+                            <option value="O+" {% if blood_group == 'O+' %}selected{% endif %}>O+</option>
+                            <option value="O-" {% if blood_group == 'O-' %}selected{% endif %}>O-</option>
+                            <option value="AB+" {% if blood_group == 'AB+' %}selected{% endif %}>AB+</option>
+                            <option value="AB-" {% if blood_group == 'AB-' %}selected{% endif %}>AB-</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label for="city" class="form-label">
+                            <i class="fas fa-city"></i> City
+                        </label>
+                        <input type="text" name="city" class="form-control" id="city" placeholder="Enter city name" value="{{ city }}">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-blood w-100">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if blood_group or city %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> Search Results</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if donors %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-user"></i> Name</th>
+                                    <th><i class="fas fa-calendar"></i> Age</th>
+                                    <th><i class="fas fa-venus-mars"></i> Gender</th>
+                                    <th><i class="fas fa-tint"></i> Blood Group</th>
+                                    <th><i class="fas fa-phone"></i> Phone</th>
+                                    <th><i class="fas fa-city"></i> City</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for donor in donors %}
+                                <tr>
+                                    <td class="fw-bold">{{ donor.name }}</td>
+                                    <td>{{ donor.age }}</td>
+                                    <td>{{ donor.gender }}</td>
+                                    <td><span class="blood-type-badge">{{ donor.blood_group }}</span></td>
+                                    <td>{{ donor.phone }}</td>
+                                    <td>{{ donor.city }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <h4>No Donors Found</h4>
+                        <p>No donors match your search criteria.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
