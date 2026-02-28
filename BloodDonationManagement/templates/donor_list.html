@@ -60,8 +60,8 @@
                             </td>
                             <td>{{ donor.last_donation|default:"N/A" }}</td>
                             <td>
-                                {% if donor.id in donor_certificates %}
-                                <a href="{% url 'download_certificate' donor_certificates.donor.id %}" class="btn btn-sm btn-info text-white" title="Download Certificate">
+                                {% if donor.has_certificate %}
+                                <a href="{% url 'download_certificate' donor.certificate_id %}" class="btn btn-sm btn-info text-white" title="Download Certificate">
                                     <i class="fas fa-download"></i>
                                 </a>
                                 {% else %}
@@ -78,7 +78,7 @@
                                     <i class="fas fa-times"></i>
                                 </a>
                                 {% elif donor.status == 'Approved' %}
-                                {% if donor.id not in donor_certificates %}
+                                {% if not donor.has_certificate %}
                                 <a href="{% url 'generate_certificate' donor.id %}" class="btn btn-sm btn-primary me-1" title="Generate Certificate">
                                     <i class="fas fa-certificate"></i>
                                 </a>

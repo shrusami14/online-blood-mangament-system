@@ -136,12 +136,17 @@ def donor_list(request):
     """List all donors view"""
     donors = Donor.objects.all().order_by('-created_at')
     
-    # Get certificates for each donor - store certificate object by donor id
+    # Get certificates for each donor - store certificate_id by donor id
     donor_certificates = {}
     for donor in donors:
         cert = Certificate.objects.filter(donor=donor).first()
         if cert:
-            donor_certificates[donor.id] = cert
+            donor_certificates[donor.id] = cert.certificate_id
+    
+    # Add certificate info directly to each donor object
+    for donor in donors:
+        donor.certificate_id = donor_certificates.get(donor.id, None)
+        donor.has_certificate = donor.id in donor_certificates
     
     context = {
         'donors': donors,
