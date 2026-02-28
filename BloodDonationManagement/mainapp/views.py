@@ -1,11 +1,16 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.db.models import Q
-from .models import Donor, BloodRequest, BloodStock
-from datetime import date
+from django.http import HttpResponse
+from django.utils import timezone
+from .models import Donor, BloodRequest, BloodStock, Certificate, Payment
+from datetime import date, datetime
+from .certificate_generator import generate_certificate_id, generate_certificate_pdf
+import random
+import string
 
 
 def admin_required(view_func):
@@ -75,6 +80,12 @@ def dashboard(request):
     recent_donors = Donor.objects.order_by('-created_at')[:5]
     recent_requests = BloodRequest.objects.order_by('-created_at')[:5]
     
+    # Get certificates for logged-in user (if not admin, show only their certificates)
+    if request.user.is_superuser:
+        recent_certificates = Certificate.objects.order_by('-issued_at')[:5]
+    else:
+        recent_certificates = Certificate.objects.filter(donor__user=request.user).order_by('-issued_at')[:5]
+    
     context = {
         'total_donors': total_donors,
         'total_requests': total_requests,
@@ -83,6 +94,7 @@ def dashboard(request):
         'available_blood_groups': available_blood_groups,
         'recent_donors': recent_donors,
         'recent_requests': recent_requests,
+        'recent_certificates': recent_certificates,
     }
     return render(request, 'dashboard.html', context)
 
@@ -123,7 +135,19 @@ def add_donor(request):
 def donor_list(request):
     """List all donors view"""
     donors = Donor.objects.all().order_by('-created_at')
-    return render(request, 'donor_list.html', {'donors': donors})
+    
+    # Get certificates for each donor - store certificate object by donor id
+    donor_certificates = {}
+    for donor in donors:
+        cert = Certificate.objects.filter(donor=donor).first()
+        if cert:
+            donor_certificates[donor.id] = cert
+    
+    context = {
+        'donors': donors,
+        'donor_certificates': donor_certificates,
+    }
+    return render(request, 'donor_list.html', context)
 
 
 @login_required
@@ -168,12 +192,36 @@ def delete_donor(request, id):
 @login_required
 @admin_required
 def approve_donor(request, id):
-    """Approve donor view - Admin only"""
+    """Approve donor view - Admin only
+    Also generates a certificate for the donor upon approval
+    """
     try:
         donor = Donor.objects.get(id=id)
         donor.status = 'Approved'
+        
+        # Set donation date to today (or use last_donation if provided)
+        donation_date = donor.last_donation if donor.last_donation else date.today()
+        
         donor.save()
-        messages.success(request, f'Donor {donor.name} approved successfully!')
+        
+        # Generate certificate for the donor
+        certificate_id = generate_certificate_id()
+        
+        # Check if certificate already exists for this donor
+        existing_cert = Certificate.objects.filter(donor=donor).first()
+        if not existing_cert:
+            certificate = Certificate.objects.create(
+                certificate_id=certificate_id,
+                donor=donor,
+                donor_name=donor.name,
+                blood_group=donor.blood_group,
+                date_of_donation=donation_date,
+                message="Thank you for saving lives"
+            )
+            messages.success(request, f'Donor {donor.name} approved successfully! Certificate {certificate_id} generated.')
+        else:
+            messages.success(request, f'Donor {donor.name} approved successfully! Certificate already exists.')
+            
     except Donor.DoesNotExist:
         messages.error(request, 'Donor not found.')
     return redirect('donor_list')
@@ -337,15 +385,19 @@ def search(request):
 
 @login_required
 def profile(request):
-    """User profile view"""
+    """User profile view with certificates"""
     donors = Donor.objects.filter(user=request.user)
     requests = BloodRequest.objects.filter(user=request.user)
+    
+    # Get certificates for this user
+    certificates = Certificate.objects.filter(donor__user=request.user).order_by('-issued_at')
     
     context = {
         'donors': donors,
         'requests': requests,
+        'certificates': certificates,
     }
-    return render(request, 'profile.html')
+    return render(request, 'profile.html', context)
 
 
 @login_required
@@ -371,3 +423,228 @@ def blood_stock(request):
     
     stocks = BloodStock.objects.all().order_by('blood_group')
     return render(request, 'blood_stock.html', {'stocks': stocks})
+
+
+# ============================================
+# Certificate Views
+# ============================================
+
+@login_required
+def certificate_list(request):
+    """
+    List all certificates for the logged-in user.
+    Admins can see all certificates.
+    """
+    if request.user.is_superuser:
+        # Admin sees all certificates
+        certificates = Certificate.objects.all().order_by('-issued_at')
+    else:
+        # Regular user sees only their certificates
+        certificates = Certificate.objects.filter(donor__user=request.user).order_by('-issued_at')
+    
+    context = {
+        'certificates': certificates,
+    }
+    return render(request, 'certificate_list.html', context)
+
+
+@login_required
+def download_certificate(request, certificate_id):
+    """
+    Download certificate as PDF.
+    Only the donor or admin can download the certificate.
+    """
+    try:
+        certificate = Certificate.objects.get(certificate_id=certificate_id)
+        
+        # Check if user is authorized (donor or admin)
+        if not request.user.is_superuser and certificate.donor.user != request.user:
+            messages.error(request, 'You are not authorized to download this certificate.')
+            return redirect('dashboard')
+        
+        # Generate PDF
+        pdf_content = generate_certificate_pdf(certificate)
+        
+        # Create response with PDF content
+        response = HttpResponse(pdf_content, content_type='application/pdf')
+        filename = f"Certificate_{certificate.certificate_id}.pdf"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
+        
+    except Certificate.DoesNotExist:
+        messages.error(request, 'Certificate not found.')
+        return redirect('dashboard')
+
+
+@login_required
+@admin_required
+def generate_certificate_for_donor(request, donor_id):
+    """
+    Manually generate a certificate for a donor (Admin only).
+    """
+    try:
+        donor = Donor.objects.get(id=donor_id)
+        
+        # Check if donor is approved
+        if donor.status != 'Approved':
+            messages.error(request, 'Only approved donors can receive certificates.')
+            return redirect('donor_list')
+        
+        # Check if certificate already exists
+        existing_cert = Certificate.objects.filter(donor=donor).first()
+        if existing_cert:
+            messages.warning(request, f'Certificate already exists for this donor: {existing_cert.certificate_id}')
+            return redirect('donor_list')
+        
+        # Generate new certificate
+        certificate_id = generate_certificate_id()
+        donation_date = donor.last_donation if donor.last_donation else date.today()
+        
+        certificate = Certificate.objects.create(
+            certificate_id=certificate_id,
+            donor=donor,
+            donor_name=donor.name,
+            blood_group=donor.blood_group,
+            date_of_donation=donation_date,
+            message="Thank you for saving lives"
+        )
+        
+        messages.success(request, f'Certificate {certificate_id} generated for {donor.name}.')
+        
+    except Donor.DoesNotExist:
+        messages.error(request, 'Donor not found.')
+    
+    return redirect('donor_list')
+
+
+# ============================================
+# Payment Views (Demo Paytm Integration)
+# ============================================
+
+def generate_payment_id():
+    """
+    Generate a unique payment ID.
+    Format: PAY-YYYYMMDD-XXXXXX
+    """
+    date_str = datetime.now().strftime('%Y%m%d')
+    random_str = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    return f"PAY-{date_str}-{random_str}"
+
+
+def generate_transaction_id():
+    """
+    Generate a unique Paytm transaction ID.
+    Format: TXN-XXXXXXXXXXXX
+    """
+    return f"TXN-{''.join(random.choices(string.ascii_uppercase + string.digits, k=12))}"
+
+
+@login_required
+def initiate_payment(request, request_id):
+    """
+    View to initiate payment for a blood request.
+    Shows payment options including Paytm.
+    """
+    try:
+        blood_request = BloodRequest.objects.get(id=request_id)
+        
+        # Check if user owns this request
+        if blood_request.user != request.user and not request.user.is_superuser:
+            messages.error(request, 'You are not authorized to make payment for this request.')
+            return redirect('request_list')
+        
+        # Check if already paid
+        if blood_request.status == 'Paid':
+            messages.warning(request, 'This request has already been paid.')
+            return redirect('request_list')
+        
+        # Calculate amount (demo: ₹500 per unit)
+        amount = blood_request.units * 500
+        
+        context = {
+            'blood_request': blood_request,
+            'amount': amount,
+        }
+        return render(request, 'initiate_payment.html', context)
+        
+    except BloodRequest.DoesNotExist:
+        messages.error(request, 'Blood request not found.')
+        return redirect('request_list')
+
+
+@login_required
+def process_payment(request, request_id):
+    """
+    View to process payment via Paytm (simulated).
+    """
+    if request.method != 'POST':
+        return redirect('request_list')
+    
+    try:
+        blood_request = BloodRequest.objects.get(id=request_id)
+        
+        # Check if user owns this request
+        if blood_request.user != request.user and not request.user.is_superuser:
+            messages.error(request, 'You are not authorized to make payment for this request.')
+            return redirect('request_list')
+        
+        # Check if already paid
+        if blood_request.status == 'Paid':
+            messages.warning(request, 'This request has already been paid.')
+            return redirect('request_list')
+        
+        # Get payment method
+        payment_method = request.POST.get('payment_method', 'Paytm')
+        
+        # Calculate amount
+        amount = blood_request.units * 500
+        
+        # Generate payment ID and transaction ID
+        payment_id = generate_payment_id()
+        transaction_id = generate_transaction_id()
+        
+        # Create payment record
+        payment = Payment.objects.create(
+            blood_request=blood_request,
+            payment_id=payment_id,
+            amount=amount,
+            payment_method=payment_method,
+            status='Success',
+            transaction_id=transaction_id,
+            notes=f'Demo payment via {payment_method}'
+        )
+        
+        # Update blood request status to Paid
+        blood_request.status = 'Paid'
+        blood_request.save()
+        
+        # Get payment details for success page
+        context = {
+            'payment': payment,
+            'blood_request': blood_request,
+        }
+        return render(request, 'payment_success.html', context)
+        
+    except BloodRequest.DoesNotExist:
+        messages.error(request, 'Blood request not found.')
+        return redirect('request_list')
+
+
+@login_required
+def payment_history(request):
+    """
+    View to display payment history for the current user.
+    Admins can see all payments.
+    """
+    if request.user.is_superuser:
+        # Admin sees all payments
+        payments = Payment.objects.all().order_by('-payment_date')
+    else:
+        # Regular user sees only their payments
+        payments = Payment.objects.filter(blood_request__user=request.user).order_by('-payment_date')
+    
+    context = {
+        'payments': payments,
+    }
+    return render(request, 'payment_history.html', context)

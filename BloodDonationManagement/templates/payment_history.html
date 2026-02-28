@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment History - Blood Donation Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h2><i class="fas fa-history"></i> Payment History</h2>
+        <p class="mb-0">View all your payment transactions</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card">
+        <div class="card-body p-0">
+            {% if payments %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-hashtag"></i> Payment ID</th>
+                            <th><i class="fas fa-user-injured"></i> Patient</th>
+                            <th><i class="fas fa-tint"></i> Blood Group</th>
+                            <th><i class="fas fa-layer-group"></i> Units</th>
+                            <th><i class="fas fa-rupee-sign"></i> Amount</th>
+                            <th><i class="fas fa-wallet"></i> Method</th>
+                            <th><i class="fas fa-info-circle"></i> Status</th>
+                            <th><i class="fas fa-calendar"></i> Date</th>
+                            <th><i class="fas fa-file-invoice"></i> Transaction ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td class="fw-bold text-primary">{{ payment.payment_id }}</td>
+                            <td>{{ payment.blood_request.patient_name }}</td>
+                            <td><span class="blood-type-badge">{{ payment.blood_request.blood_group }}</span></td>
+                            <td>{{ payment.blood_request.units }}</td>
+                            <td class="fw-bold text-success">₹{{ payment.amount }}</td>
+                            <td>
+                                {% if payment.payment_method == 'Paytm' %}
+                                <img src="https://cdn.worldvectorlogo.com/logos/paytm.svg" alt="Paytm" height="20">
+                                {% elif payment.payment_method == 'Card' %}
+                                <i class="fas fa-credit-card text-primary"></i> Card
+                                {% elif payment.payment_method == 'UPI' %}
+                                <i class="fas fa-mobile-alt text-success"></i> UPI
+                                {% else %}
+                                <i class="fas fa-university text-info"></i> Net Banking
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if payment.status == 'Success' %}
+                                <span class="status-badge status-approved">Success</span>
+                                {% elif payment.status == 'Pending' %}
+                                <span class="status-badge status-pending">Pending</span>
+                                {% else %}
+                                <span class="status-badge status-rejected">Failed</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ payment.payment_date|date:"d M Y" }}</td>
+                            <td><small class="text-muted">{{ payment.transaction_id }}</small></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-receipt"></i>
+                <h4>No Payments Yet</h4>
+                <p>You haven't made any payments yet.</p>
+                <a href="{% url 'request_blood' %}" class="btn btn-blood mt-3">
+                    <i class="fas fa-hand-holding-medical"></i> Request Blood
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

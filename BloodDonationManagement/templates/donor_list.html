@@ -34,6 +34,7 @@
                             <th><i class="fas fa-city"></i> City</th>
                             <th><i class="fas fa-info-circle"></i> Status</th>
                             <th><i class="fas fa-calendar-alt"></i> Last Donation</th>
+                            <th><i class="fas fa-certificate"></i> Certificate</th>
                             {% if user.is_superuser %}
                             <th><i class="fas fa-cog"></i> Actions</th>
                             {% endif %}
@@ -58,6 +59,15 @@
                                 {% endif %}
                             </td>
                             <td>{{ donor.last_donation|default:"N/A" }}</td>
+                            <td>
+                                {% if donor.id in donor_certificates %}
+                                <a href="{% url 'download_certificate' donor_certificates.donor.id %}" class="btn btn-sm btn-info text-white" title="Download Certificate">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
                             {% if user.is_superuser %}
                             <td>
                                 {% if donor.status == 'Pending' %}
@@ -67,6 +77,12 @@
                                 <a href="{% url 'reject_donor' donor.id %}" class="btn btn-sm btn-warning me-1" title="Reject">
                                     <i class="fas fa-times"></i>
                                 </a>
+                                {% elif donor.status == 'Approved' %}
+                                {% if donor.id not in donor_certificates %}
+                                <a href="{% url 'generate_certificate' donor.id %}" class="btn btn-sm btn-primary me-1" title="Generate Certificate">
+                                    <i class="fas fa-certificate"></i>
+                                </a>
+                                {% endif %}
                                 {% endif %}
                                 <a href="{% url 'edit_donor' donor.id %}" class="btn btn-sm btn-outline-blood me-1">
                                     <i class="fas fa-edit"></i>

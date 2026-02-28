@@ -29,6 +29,16 @@ urlpatterns = [
     path('search/', views.search, name='search'),
     path('profile/', views.profile, name='profile'),
     path('blood-stock/', views.blood_stock, name='blood_stock'),
+    
+    # Certificate URLs
+    path('certificates/', views.certificate_list, name='certificate_list'),
+    path('certificate/download/<str:certificate_id>/', views.download_certificate, name='download_certificate'),
+    path('certificate/generate/<int:donor_id>/', views.generate_certificate_for_donor, name='generate_certificate'),
+    
+    # Payment URLs (Demo Paytm Integration)
+    path('payment/initiate/<int:request_id>/', views.initiate_payment, name='initiate_payment'),
+    path('payment/process/<int:request_id>/', views.process_payment, name='process_payment'),
+    path('payment/history/', views.payment_history, name='payment_history'),
 ]
 
 if settings.DEBUG:

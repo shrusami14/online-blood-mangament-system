@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Initiate Payment - Blood Donation Management System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h2><i class="fas fa-credit-card"></i> Initiate Payment</h2>
+        <p class="mb-0">Complete your payment for blood request</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-file-invoice"></i> Payment Details</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Request Details -->
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-user-injured"></i> Patient: {{ blood_request.patient_name }}</h5>
+                        <p class="mb-1"><strong>Blood Group:</strong> <span class="blood-type-badge">{{ blood_request.blood_group }}</span></p>
+                        <p class="mb-1"><strong>Units:</strong> {{ blood_request.units }}</p>
+                        <p class="mb-1"><strong>Hospital:</strong> {{ blood_request.hospital }}</p>
+                        <p class="mb-0"><strong>Urgency:</strong> 
+                            {% if blood_request.urgency == 'Critical' %}
+                            <span class="badge bg-danger">{{ blood_request.urgency }}</span>
+                            {% elif blood_request.urgency == 'Urgent' %}
+                            <span class="badge bg-warning text-dark">{{ blood_request.urgency }}</span>
+                            {% else %}
+                            <span class="badge bg-info">{{ blood_request.urgency }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <!-- Amount Display -->
+                    <div class="text-center my-4">
+                        <h3 class="text-muted">Total Amount</h3>
+                        <h1 class="text-danger">₹{{ amount }}</h1>
+                    </div>
+                    
+                    <!-- Payment Form -->
+                    <form method="POST" action="{% url 'process_payment' blood_request.id %}">
+                        {% csrf_token %}
+                        
+                        <h5 class="mb-3"><i class="fas fa-wallet"></i> Select Payment Method</h5>
+                        
+                        <div class="row g-3">
+                            <!-- Paytm Option -->
+                            <div class="col-md-6">
+                                <label class="payment-option">
+                                    <input type="radio" name="payment_method" value="Paytm" checked>
+                                    <div class="payment-card">
+                                        <img src="https://cdn.worldvectorlogo.com/logos/paytm.svg" alt="Paytm" height="40">
+                                        <h6 class="mt-2">Paytm</h6>
+                                        <small class="text-muted">Fast & Secure</small>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <!-- Card Option -->
+                            <div class="col-md-6">
+                                <label class="payment-option">
+                                    <input type="radio" name="payment_method" value="Card">
+                                    <div class="payment-card">
+                                        <i class="fas fa-credit-card fa-2x text-primary"></i>
+                                        <h6 class="mt-2">Debit/Credit Card</h6>
+                                        <small class="text-muted">Visa, Mastercard, RuPay</small>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <!-- UPI Option -->
+                            <div class="col-md-6">
+                                <label class="payment-option">
+                                    <input type="radio" name="payment_method" value="UPI">
+                                    <div class="payment-card">
+                                        <i class="fas fa-mobile-alt fa-2x text-success"></i>
+                                        <h6 class="mt-2">UPI</h6>
+                                        <small class="text-muted">Google Pay, PhonePe, Paytm</small>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <!-- Net Banking Option -->
+                            <div class="col-md-6">
+                                <label class="payment-option">
+                                    <input type="radio" name="payment_method" value="Net Banking">
+                                    <div class="payment-card">
+                                        <i class="fas fa-university fa-2x text-info"></i>
+                                        <h6 class="mt-2">Net Banking</h6>
+                                        <small class="text-muted">All Major Banks</small>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-blood btn-lg w-100">
+                                <i class="fas fa-lock"></i> Pay ₹{{ amount }} via Paytm
+                            </button>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt"></i> Secure payment powered by Paytm
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="text-center mt-3">
+                <a href="{% url 'request_list' %}" class="btn btn-outline-blood">
+                    <i class="fas fa-arrow-left"></i> Back to Requests
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .payment-option input {
+        display: none;
+    }
+    
+    .payment-card {
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: #fafafa;
+    }
+    
+    .payment-option input:checked + .payment-card {
+        border-color: #dc3545;
+        background: #fff5f5;
+        box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1);
+    }
+    
+    .payment-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
