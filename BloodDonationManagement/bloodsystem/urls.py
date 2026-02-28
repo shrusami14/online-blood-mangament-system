@@ -24,6 +24,7 @@ urlpatterns = [
     path('requests/', views.request_list, name='request_list'),
     path('approve-request/<int:id>/', views.approve_request, name='approve_request'),
     path('reject-request/<int:id>/', views.reject_request, name='reject_request'),
+    path('cancel-request/<int:id>/', views.cancel_request, name='cancel_request'),
     path('delete-request/<int:id>/', views.delete_request, name='delete_request'),
     path('search/', views.search, name='search'),
     path('profile/', views.profile, name='profile'),

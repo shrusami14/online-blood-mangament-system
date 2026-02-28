@@ -270,6 +270,36 @@ def reject_request(request, id):
 
 
 @login_required
+def cancel_request(request, id):
+    """
+    Cancel blood request view - Owner only
+    Users can only cancel their own requests when status is 'Pending'
+    """
+    try:
+        blood_request = BloodRequest.objects.get(id=id)
+        
+        # Check if the logged-in user is the owner of the request
+        if blood_request.user != request.user:
+            messages.error(request, 'You are not authorized to cancel this request.')
+            return redirect('request_list')
+        
+        # Check if request status is Pending
+        if blood_request.status != 'Pending':
+            messages.error(request, 'You can only cancel pending requests.')
+            return redirect('request_list')
+        
+        # Update status to Cancelled (do NOT delete from database)
+        blood_request.status = 'Cancelled'
+        blood_request.save()
+        messages.success(request, 'Blood request cancelled successfully.')
+        
+    except BloodRequest.DoesNotExist:
+        messages.error(request, 'Blood request not found.')
+    
+    return redirect('request_list')
+
+
+@login_required
 @admin_required
 def delete_request(request, id):
     """Delete blood request view - Admin only"""
